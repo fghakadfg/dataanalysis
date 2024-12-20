@@ -95,7 +95,7 @@ class ForecastApp(QMainWindow):
             X, y, scaler = self.prepare_data(data, target_column, date_column)
 
             # Генерация будущих дат для прогноза
-            future_dates = self.generate_future_dates(data[date_column].max(), periods=5)
+            future_dates = self.generate_future_dates(data[date_column].max(), periods=2)
 
             # Построение прогноза
             model, forecast = self.build_forecast(X, y, future_dates, scaler)
