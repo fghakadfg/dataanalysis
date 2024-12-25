@@ -104,7 +104,7 @@ class ForecastApp(QMainWindow):
                 raise ValueError("Не выбраны данные или целевой столбец.")
 
             # Подготовка данных
-            X, y, feature_names = self.prepare_data()
+            X, y, column_transformer, feature_names = self.prepare_data()
 
             # Построение прогноза
             model, forecast, mse, next_index_forecast = self.build_forecast(X, y)
@@ -137,7 +137,7 @@ class ForecastApp(QMainWindow):
         X_transformed = column_transformer.fit_transform(X)
         feature_names = numeric_features + list(column_transformer.named_transformers_['cat'].get_feature_names_out())
 
-        return X_transformed, y, feature_names
+        return X_transformed, y, column_transformer, feature_names
 
     def build_forecast(self, X, y):
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -152,7 +152,7 @@ class ForecastApp(QMainWindow):
         forecast = model.predict(X)
 
         # Прогноз для следующего индекса
-        next_features = np.mean(X, axis=0).reshape(1, -1)
+        next_features = np.asarray(np.mean(X, axis=0)).reshape(1, -1)
         next_index_forecast = model.predict(next_features)[0]
 
         return model, forecast, mse, next_index_forecast
