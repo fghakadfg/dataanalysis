@@ -13,6 +13,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.metrics import mean_squared_error
+from PyQt5.QtChart import QChart, QChartView, QBarSeries, QBarSet
+from PyQt5.QtGui import QPainter
 
 
 class ForecastApp(QMainWindow):
@@ -61,7 +63,8 @@ class ForecastApp(QMainWindow):
 
         # Графики
         self.canvas_forecast = FigureCanvas(plt.Figure(figsize=(5, 4)))
-        self.canvas_importance = FigureCanvas(plt.Figure(figsize=(5, 4)))
+        self.canvas_importance = QWidget()
+        self.canvas_importance.setLayout(QVBoxLayout())
         graph_layout = QHBoxLayout()
         graph_layout.addWidget(self.canvas_forecast)
         graph_layout.addWidget(self.canvas_importance)
@@ -173,14 +176,36 @@ class ForecastApp(QMainWindow):
         self.canvas_forecast.draw()
 
     def plot_feature_importances(self, model, feature_names):
-        ax = self.canvas_importance.figure.subplots()
-        ax.clear()
+        # Очищаем предыдущий контент
+        for i in reversed(range(self.canvas_importance.layout().count())):
+            widget_to_remove = self.canvas_importance.layout().itemAt(i).widget()
+            self.canvas_importance.layout().removeWidget(widget_to_remove)
+            widget_to_remove.deleteLater()
 
+        # Создаем серию данных
+        series = QBarSeries()
+        bar_set = QBarSet("Feature Importance")
         importances = model.feature_importances_
-        ax.barh(feature_names, importances, color="skyblue")
-        ax.set_xlabel("Важность признака")
-        ax.set_title("Важность признаков")
-        self.canvas_importance.draw()
+        bar_set.append(importances)
+        series.append(bar_set)
+
+        # Создаем график
+        chart = QChart()
+        chart.addSeries(series)
+        chart.setTitle("Важность признаков")
+        chart.setAnimationOptions(QChart.SeriesAnimations)
+        chart.createDefaultAxes()
+
+        # Установка категорий для оси X
+        axis_x = chart.axisX(series)
+        axis_x.setCategories(feature_names)
+
+        # Настройка графика
+        chart_view = QChartView(chart)
+        chart_view.setRenderHint(QPainter.Antialiasing)
+
+        # Добавление графика в макет
+        self.canvas_importance.layout().addWidget(chart_view)
 
 
 if __name__ == "__main__":
